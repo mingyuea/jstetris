@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            /* ***These are things that we want to load before any of the setInterval time loops or any other functions do*** */
+            var peices=[{name:"l",color:"blue",posit:[4,5,6,7]},
+                        {name:"o",color:"red",posit:[5,6,15,16]},
+                        {name:"t",color:"green",posit:[5,6,7,16]},
+                        {name:"s",color:"yellow",posit:[5,6,14,15]}
+                       ]; //jsust some peices, not all
+            var tmpSpaces;
+            var currentColor;
+            var counter=0;
+            var dropSpace=[5,6];
+            function randPick(){  //how we randomly select a peice
+                var randInd=Math.floor(Math.random()*peices.length);
+                tmpSpaces=[];
+                for(i=0;i<4;i++){
+                    tmpSpaces.push(peices[randInd].posit[i]);
+                };
+                currentColor=peices[randInd].color;
+            };
+            randPick();
+            
+        </script>
+    </head>
+    <style>
+        #container{
+            position: relative;
+            display:table;
+            text-align:center;
+        }
+        table{
+            margin:auto;
+            border-collapse:collapse;
+            float:left;
+        }
+        td{
+            border:1px solid black;
+            height:20px;
+            width:20px;
+            margin:auto;
+            padding:0;
+        }
+        p{
+            margin:10px;
+        }
+        
+    </style>
+    <body onkeydown="moveFunc(event)">
+        <div id="0"></div>
+        <div id="container">
+            <h1>Javascript Tetris</h1>
+            <table id="playScreen">
+                
+            </table>
+            <h4>Intro</h4>
+            <p>Hello, this is my Javascript tetris project. Use the left, righ, and down arrow keys to maneuver your peice. NOTE: still haven't quite gotten the peice ROTATION quite down. A few other things still need work as well, and it might be very buggy</p>
+            
+        </div>
+        <script>
+            /* ***This generates the tetris board, and gives each block on*** */
+            var m = 20;
+            var n = 10;
+            var rows="";
+            for(i=0;i<m;i++){     //generates a 10X20 board
+                rows=rows+"<tr>";
+                for(j=1;j<=n;j++){
+                    var idNum=i*n+j;
+                    var cols="<td id="+idNum+"></td>";
+                    rows=rows+cols;
+                };    
+                rows=rows+"</tr>"
+            };
+            document.getElementById("playScreen").innerHTML=rows;
+            
+            
+            
+            /* ***This is the movement function using keyboard*** */
+            function moveFunc(event){
+                var direction= event.keyCode;
+                var stopLeft, stopRight, stopDown=false;
+                for(i=0;i<4;i++){
+                    if(tmpSpaces[i]%10==1){
+                        stopLeft=true;
+                    }
+                    else if(tmpSpaces[i]%10==0){
+                        stopRight=true;
+                    }
+                    else if((takenSpace.indexOf(tmpSpaces[i]+10)>-1)||tmpSpaces[i]>180){
+                        stopDown=true;
+                    }
+                }
+                
+                switch(direction){
+                    case 37:      //left
+                        if(stopLeft){
+                            break;
+                        }
+                        else{
+                            for(i=0;i<4;i++){
+                                tmpSpaces[i]=tmpSpaces[i]-1;
+                            }
+                        }
+                        break;
+                    case 39:      //right
+                        if(stopRight){
+                            break;
+                        }
+                        else{
+                            for(i=0;i<4;i++){
+                                tmpSpaces[i]=tmpSpaces[i]+1;
+                            }
+                        }
+                        break;
+                    case 40:      //down
+                        if(stopDown){
+                            break;
+                        }
+                        else{
+                            for(i=0;i<4;i++){
+                                tmpSpaces[i]=tmpSpaces[i]+10;
+                            }
+                        }
+                        break;
+                    case 38:      //up == ROTATE
+                        break;
+                }
+            }
+            
+            
+            
+            /* ***Here we define the dropping function used in Tetris**** */
+            var oneDrop=setInterval(dropping, 300);
+            var availSpace=[];
+            var takenSpace=[];
+            var count=0;
+            for(i=1;i<201;i++){
+                availSpace.push(i);
+            }
+            var currentSpaces=[0,0,0,0];
+            
+            function dropping(){
+                for(i=0;i<4;i++){   //color current Space, add 10 to it to predict where it will drop
+                    document.getElementById(tmpSpaces[i]).style.backgroundColor=currentColor;
+                    
+                    currentSpaces[i]=tmpSpaces[i];
+                    tmpSpaces[i]=tmpSpaces[i]+10;
+                }
+                
+                var whiteLim=Math.min(...currentSpaces);
+                if(currentSpaces.sort(function(a,b){return a-b})[0]>11){    //anyspace behind the shape will be white
+                    for(i=0;i<availSpace.length;i++){
+                        if(availSpace[i]<whiteLim){
+                            document.getElementById(availSpace[i]).style.backgroundColor="white";
+                        }
+                    }
+                    /*for(j=0;j<4;j++){
+                        if(tmpSpaces.indexOf(currentSpaces[j])<0){
+                            document.getElementById((currentSpaces[j]-10)).style.backgroundColor="white";
+                        }
+                    }*/
+                }
+                
+                var stopDrop=false;  //checks if the peice can move into its next position
+                for(i=0;i<4;i++){
+                    if(availSpace.indexOf(tmpSpaces[i])<0){
+                        stopDrop=true;
+                    }
+                    if(takenSpace.indexOf(currentSpaces[i])>-1){
+                        stopDrop=true;
+                    }
+                }
+                if(stopDrop){  //if it cannot, stop the current dropping function and start again
+                    for(i=0;i<4;i++){
+                        takenSpace.push(currentSpaces[i]);
+                        var indxRm=availSpace.indexOf(currentSpaces[i]);
+                        availSpace.splice(indxRm,1);
+                    }
+                    clearInterval(oneDrop);
+                    randPick();
+                    oneDrop=setInterval(dropping,300)
+                    counter++;
+                    console.log(takenSpace);
+                }
+                
+                /*if(counter>8){
+                    clearInterval(oneDrop);
+                }*/
+                
+                for(i=0;i<2;i++){  //if the stack reaches the top, then stop the game
+                    if(takenSpace.indexOf(dropSpace[i])>-1){
+                        clearInterval(oneDrop);
+                    }
+                }
+                
+                if(tmpSpaces.sort(function(a,b){return a-b})[3]>201){  //defines what happens when peices reach the very bottom of the grid
+                    for(i=0;i<4;i++){
+                        takenSpace.push(currentSpaces[i]);
+                        var indxRm=availSpace.indexOf(currentSpaces[i]);
+                        availSpace.splice(indxRm,1);
+                    }
+                    clearInterval(oneDrop);
+                    randPick();
+                    oneDrop=setInterval(dropping,300);
+                    console.log(takenSpace);
+                }
+            }
+        </script>
+    </body>
+</html>
